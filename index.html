@@ -1,0 +1,981 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>[hidden]{display:none!important}body{margin:0}</style>
+<title>BW@</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500&display=swap">
+<style>
+/* Layout: outil personnel en terminal abyssal, trois onglets, sous-onglets par étape du parcours, orbe de particules derrière chaque en-tête. */
+:root {
+  color-scheme: dark;
+  --abyss: #012624;
+  --deep: #011d1c;
+  --kelp: #003734;
+  --kelp-hi: #03514b;
+  --mist: #edfffe;
+  --white: #ffffff;
+  --silver: #bbc7c6;
+  --slate: #707777;
+  --phosphor: #fde9ff;
+  --ink: #222222;
+  --line: rgba(255, 255, 255, .1);
+  --arrow-fill: rgba(3, 81, 75, .5);
+  --aurora: linear-gradient(90deg, rgb(203, 255, 252) 0%, rgb(237, 255, 254) 26.25%, rgb(255, 253, 250) 47.57%, rgb(250, 209, 255) 88.96%);
+  --sans: 'DM Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --r-card: 16px;
+  --r-small: 6px;
+  --bar-h: 80px;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  background: var(--abyss);
+  color: var(--silver);
+  font: 400 16px/1.4 var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0 0 auto;
+  height: env(safe-area-inset-top, 0px);
+  z-index: 10;
+  background: var(--abyss);
+}
+button, input, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--mist); outline-offset: 2px; }
+h1, h2, h3 { color: var(--white); font-weight: 500; margin: 0; text-wrap: balance; }
+p { margin: 0; }
+ul { margin: 0; padding: 0; list-style: none; }
+
+.wrap {
+  max-width: 1440px;
+  margin-inline: auto;
+  padding-left: max(16px, 4vw, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, 4vw, env(safe-area-inset-right, 0px));
+}
+.eyebrow { color: var(--silver); font-size: 12px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; }
+.ro .edit { display: none !important; }
+
+/* Barre haute */
+.top {
+  position: sticky;
+  top: env(safe-area-inset-top, 0px);
+  z-index: 9;
+  background: var(--abyss);
+  border-bottom: 1px solid var(--line);
+}
+.top-in { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; min-height: var(--bar-h); gap: 16px; }
+.mark { display: inline-flex; align-items: center; gap: 10px; color: var(--white); font-size: 20px; font-weight: 500; letter-spacing: -.02em; text-decoration: none; justify-self: start; }
+.tabs { display: flex; gap: 32px; }
+.tab {
+  background: none; border: 0; border-bottom: 1px solid transparent;
+  padding: 8px 0; color: var(--silver);
+  font-size: 12px; letter-spacing: .12em; text-transform: uppercase; white-space: nowrap;
+}
+.tab:hover { color: var(--white); }
+.tab[aria-selected="true"] { color: var(--white); border-bottom-color: var(--mist); }
+#status {
+  justify-self: end; color: var(--silver);
+  font-size: 10px; letter-spacing: .15em; text-transform: uppercase;
+  border: 1px solid var(--line); border-radius: var(--r-small);
+  padding: 6px 10px; white-space: nowrap;
+}
+
+/* Scène */
+.stage { position: relative; overflow: clip; }
+#orb { position: absolute; top: -90px; right: max(-60px, -4vw); width: clamp(260px, 32vw, 440px); aspect-ratio: 1; max-width: 100%; pointer-events: none; opacity: .3; }
+main { position: relative; padding-bottom: 68px; }
+
+.sec { padding-block: clamp(32px, 4vw, 48px); display: grid; gap: 24px; }
+.sec-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; }
+.sec-head > div:not(.subtabs) { display: grid; gap: 12px; }
+.sec-head h2 { font-size: clamp(28px, 3vw, 36px); line-height: 1.05; letter-spacing: -.02em; }
+
+/* Boutons */
+.ghost { background: var(--kelp); border: 0; border-radius: var(--r-small); color: var(--white); padding: 10px 16px; font-size: 14px; white-space: nowrap; }
+.ghost:hover { background: var(--kelp-hi); }
+.plain { background: none; border: 0; color: var(--silver); padding: 10px 8px; font-size: 14px; }
+.plain:hover { color: var(--white); }
+.cta {
+  background: var(--aurora); border: 0; border-radius: var(--r-small); color: var(--ink);
+  padding: 14px 24px; font: 400 14px/1.2 Arial, ui-sans-serif, system-ui, sans-serif;
+  text-transform: uppercase; letter-spacing: .04em; white-space: nowrap;
+}
+.icon {
+  flex: none; min-width: 32px; height: 32px; padding: 0 8px;
+  display: inline-grid; place-items: center;
+  background: var(--arrow-fill); color: var(--white);
+  border: 0; border-radius: var(--r-small); font-size: 16px; line-height: 1;
+}
+.icon:hover { background: var(--kelp-hi); }
+
+/* Champs */
+.field { height: 44px; background: var(--kelp); border: 1px solid transparent; border-radius: var(--r-small); padding: 0 12px; width: 100%; min-width: 0; }
+textarea.field { height: auto; min-height: 88px; padding: 10px 12px; resize: vertical; display: block; }
+.field::placeholder { color: var(--silver); }
+.field:hover { border-color: var(--kelp-hi); }
+.form-actions { display: flex; align-items: center; gap: 8px; }
+.empty { padding: 32px 0; color: var(--silver); }
+
+/* Compteurs */
+.counters { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); gap: 20px; }
+.counter { background: var(--kelp); border-radius: var(--r-card); padding: 28px; display: grid; gap: 8px; align-content: start; min-width: 0; }
+.bare { background: none; border: 0; border-bottom: 1px solid transparent; border-radius: 0; width: 100%; padding: 0; min-width: 0; }
+.bare:hover { border-bottom-color: var(--line); }
+.bare:focus { outline: none; border-bottom-color: var(--mist); }
+.counter-n { color: var(--phosphor); font-size: clamp(56px, 6vw, 72px); font-weight: 500; line-height: 1.05; letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
+.counter-d { color: var(--mist); font-size: 13px; letter-spacing: .055em; text-transform: uppercase; resize: none; display: block; field-sizing: content; min-height: 1.4em; overflow: hidden; }
+.counter-d::placeholder { color: var(--silver); }
+.counter-tools { display: flex; gap: 6px; margin-top: 8px; }
+.counter-tools .del { margin-left: auto; }
+.del[data-armed] { font-size: 12px; }
+
+/* Tâches */
+.task-form { display: grid; grid-template-columns: 170px minmax(0, 1fr) auto auto; gap: 12px 16px; align-items: center; background: var(--deep); border-radius: var(--r-card); padding: 20px; }
+.colors { display: flex; align-items: center; gap: 6px; }
+.colors input[type="radio"] { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.colors label { width: 28px; height: 28px; border-radius: var(--r-small); display: grid; place-items: center; cursor: pointer; font-weight: 500; font-size: 15px; background: var(--kelp); border: 1px solid transparent; }
+.colors input:checked + label { border-color: var(--mist); }
+.colors input:focus-visible + label { outline: 2px solid var(--mist); outline-offset: 2px; }
+.colors input[type="color"] { width: 28px; height: 28px; padding: 0; border: 0; background: none; border-radius: var(--r-small); cursor: pointer; }
+.task { display: grid; grid-template-columns: 24px 170px minmax(0, 1fr) auto auto; align-items: center; gap: 8px 16px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.task input[type="checkbox"] { width: 18px; height: 18px; accent-color: #edfffe; margin: 0; }
+.task-date { font-size: 14px; font-variant-numeric: tabular-nums; }
+.task-text { overflow-wrap: anywhere; }
+.task.done .task-text { text-decoration: line-through; opacity: .55; }
+.task.done .task-date { opacity: .55; }
+.late { font-size: 10px; letter-spacing: .15em; text-transform: uppercase; background: var(--phosphor); color: var(--abyss); padding: 2px 6px; border-radius: var(--r-small); }
+
+/* Sous-onglets */
+.subtabs { display: flex; gap: 6px; overflow-x: auto; padding: 2px; }
+.subtab { background: transparent; border: 1px solid var(--line); border-radius: var(--r-small); color: var(--silver); padding: 10px 20px; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; }
+.subtab:hover { color: var(--white); border-color: var(--slate); }
+.subtab[aria-selected="true"] { background: var(--kelp); border-color: var(--kelp); color: var(--white); }
+
+/* Cartes */
+.halves { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px clamp(20px, 3vw, 48px); }
+.col { display: grid; gap: 16px; align-content: start; min-width: 0; }
+.col-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-bottom: 16px; border-bottom: 1px solid var(--line); }
+.col-head h2 { font-size: clamp(24px, 2.6vw, 36px); line-height: 1.05; letter-spacing: -.02em; }
+.add-form { display: grid; gap: 10px; background: var(--deep); border-radius: var(--r-card); padding: 16px; }
+.cards { display: grid; gap: 12px; }
+.card { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: start; padding: 18px; border-radius: var(--r-card); }
+.col-do .card { background: var(--kelp); }
+.col-dont .card { background: var(--deep); }
+.card h3 { font-size: 18px; line-height: 1.25; letter-spacing: -.01em; overflow-wrap: anywhere; }
+.card p, .entry p { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 14px; margin-top: 4px; }
+.card.dragging { z-index: 3; outline: 1px solid var(--mist); }
+.grip { background: none; border: 0; color: var(--silver); padding: 4px 2px; cursor: grab; touch-action: none; line-height: 0; border-radius: var(--r-small); }
+.grip:hover { color: var(--white); }
+.dragging .grip { cursor: grabbing; }
+.card-tools { display: flex; gap: 4px; }
+
+/* Implémentation */
+.cats { display: grid; gap: 40px; }
+.cat { display: grid; gap: 16px; }
+.cat-head { display: flex; align-items: center; gap: 12px; }
+.cat-title { color: var(--white); font-size: clamp(28px, 3vw, 36px); font-weight: 500; line-height: 1.1; letter-spacing: -.02em; }
+.cat-body { margin-left: clamp(16px, 3vw, 36px); padding-left: clamp(16px, 2vw, 28px); border-left: 1px solid var(--line); display: grid; gap: 12px; justify-items: start; }
+.entries { width: 100%; }
+.entry { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.entry > div { min-width: 0; }
+.entry h3 { font-size: 18px; line-height: 1.25; letter-spacing: -.01em; overflow-wrap: anywhere; }
+.slot { width: 100%; max-width: 640px; }
+.slot:empty { display: none; }
+
+footer { background: var(--deep); padding-block: 48px; font-size: 13px; }
+.foot-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.locked .tabs, .locked .stage { display: none; }
+.gate { padding-block: clamp(40px, 8vw, 96px); }
+.gate-card { max-width: 640px; margin-inline: auto; background: var(--deep); border-radius: var(--r-card); padding: clamp(24px, 4vw, 48px); display: grid; gap: 20px; }
+.gate-card h1 { font-size: clamp(2.1rem, 1.5rem + 2.4vw, 3rem); line-height: 1; letter-spacing: -.04em; }
+.gate-card ol { margin: 0; padding-left: 20px; display: grid; gap: 8px; }
+.gate-card a { color: var(--mist); }
+#gate-form { display: grid; gap: 10px; }
+.gate-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; }
+#gate-msg { color: var(--phosphor); }
+#gate-msg:empty { display: none; }
+@media (max-width: 480px) { .gate-row { grid-template-columns: minmax(0, 1fr); } }
+
+@media (max-width: 820px) {
+  #orb { opacity: .22; right: -90px; }
+  .top-in { grid-template-columns: 1fr auto; padding-block: 12px; }
+  .tabs { grid-column: 1 / -1; grid-row: 2; justify-content: space-between; gap: 16px; }
+  .task-form { grid-template-columns: minmax(0, 1fr); }
+  .task { grid-template-columns: 24px minmax(0, 1fr) auto; }
+  .task-date { grid-column: 2; grid-row: 1; }
+  .task-text { grid-column: 2 / -1; grid-row: 2; }
+  .late { grid-column: 2; grid-row: 3; justify-self: start; }
+  .task .del { grid-column: 3; grid-row: 1; }
+  .task input[type="checkbox"] { grid-column: 1; grid-row: 1; }
+}
+@media (max-width: 640px) {
+  .halves { grid-template-columns: minmax(0, 1fr); gap: 40px; }
+}
+@media (max-width: 480px) {
+  .tab .long { display: none; }
+  .tab { letter-spacing: .1em; }
+  .subtab { padding: 10px 14px; }
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap top-in">
+    <a class="mark" href="#roadmap" data-act="tab" data-tab="roadmap">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="10" stroke="currentColor"/><path d="M1.5 12c3-3.2 6-3.2 9.5 0s6.500 3.200 9.500 0" stroke="currentColor"/></svg>
+      BW@
+    </a>
+    <div class="tabs" role="tablist" aria-label="Sections du site">
+      <button class="tab" role="tab" id="tab-roadmap" data-act="tab" data-tab="roadmap" aria-controls="panel-roadmap">Roadmap<span class="long"> &amp; backlog</span></button>
+      <button class="tab" role="tab" id="tab-conseils" data-act="tab" data-tab="conseils" aria-controls="panel-conseils">Conseils</button>
+      <button class="tab" role="tab" id="tab-implementation" data-act="tab" data-tab="implementation" aria-controls="panel-implementation">Implémentation</button>
+    </div>
+    <span id="status" role="status">Chargement</span>
+  </div>
+</header>
+
+<section class="gate wrap" id="gate" hidden>
+  <div class="gate-card">
+    <span class="eyebrow">Accès privé</span>
+    <h1>Connecte cet appareil</h1>
+    <p>Tes données sont dans le dépôt GitHub privé bw-data. Une clé d'accès permet au site de les lire et de les enregistrer. Elle reste dans ce navigateur.</p>
+    <ol>
+      <li><a href="https://github.com/settings/personal-access-tokens/new?name=BW%40%20site&amp;description=Lecture%20et%20ecriture%20de%20bw-data&amp;expires_in=none&amp;contents=write" target="_blank" rel="noopener">Crée une clé d'accès sur GitHub</a>.</li>
+      <li>Dans « Repository access », choisis « Only select repositories », puis bw-data.</li>
+      <li>Vérifie que « Contents » est réglé sur « Read and write ».</li>
+      <li>Clique sur « Generate token », copie la clé et colle-la ci-dessous.</li>
+    </ol>
+    <form id="gate-form">
+      <label class="eyebrow" for="gate-token">Clé d'accès</label>
+      <div class="gate-row">
+        <input class="field" id="gate-token" type="password" autocomplete="off" spellcheck="false" required placeholder="github_pat_…">
+        <button class="cta" type="submit">Connecter</button>
+      </div>
+    </form>
+    <p id="gate-msg" role="alert"></p>
+  </div>
+</section>
+
+<div class="stage">
+  <canvas id="orb" aria-hidden="true"></canvas>
+  <main class="wrap">
+
+    <section id="panel-roadmap" role="tabpanel" aria-labelledby="tab-roadmap">
+      <section class="sec">
+        <div class="sec-head">
+          <div><span class="eyebrow">Dashboard</span><h2>Mes compteurs</h2></div>
+          <button class="ghost edit" data-act="add-counter">+ Ajouter un compteur</button>
+        </div>
+        <div class="counters" id="counters"></div>
+      </section>
+
+      <section class="sec">
+        <div class="sec-head">
+          <div><span class="eyebrow">Backlog</span><h2>Tâches à faire</h2></div>
+        </div>
+        <form class="task-form edit" id="task-form">
+          <input class="field" id="task-date" type="date" required aria-label="Date de la tâche">
+          <input class="field" id="task-text" type="text" required maxlength="300" placeholder="Nouvelle tâche" aria-label="Description de la tâche">
+          <div class="colors" id="colors" role="radiogroup" aria-label="Couleur du texte"></div>
+          <button class="cta" type="submit">Ajouter</button>
+        </form>
+        <ul id="tasks"></ul>
+      </section>
+    </section>
+
+    <section id="panel-conseils" role="tabpanel" aria-labelledby="tab-conseils" hidden>
+      <section class="sec">
+        <div class="subtabs" id="sub-conseils" role="tablist" aria-label="Étapes des conseils"></div>
+        <div class="halves" id="halves">
+          <section class="col col-dont">
+            <div class="col-head"><h2>À ne pas faire</h2><button class="ghost edit" data-act="open-card" data-side="dont">+ Ajouter</button></div>
+            <form class="add-form edit" data-side="dont" hidden>
+              <input class="field" id="card-title-dont" name="title" required maxlength="120" placeholder="Titre" aria-label="Titre de la carte">
+              <textarea class="field" id="card-text-dont" name="text" maxlength="2000" placeholder="Texte" aria-label="Texte de la carte"></textarea>
+              <div class="form-actions"><button class="cta" type="submit">Ajouter la carte</button><button class="plain" type="button" data-act="close-card" data-side="dont">Annuler</button></div>
+            </form>
+            <ul class="cards" id="list-dont"></ul>
+          </section>
+          <section class="col col-do">
+            <div class="col-head"><h2>À faire</h2><button class="ghost edit" data-act="open-card" data-side="do">+ Ajouter</button></div>
+            <form class="add-form edit" data-side="do" hidden>
+              <input class="field" id="card-title-do" name="title" required maxlength="120" placeholder="Titre" aria-label="Titre de la carte">
+              <textarea class="field" id="card-text-do" name="text" maxlength="2000" placeholder="Texte" aria-label="Texte de la carte"></textarea>
+              <div class="form-actions"><button class="cta" type="submit">Ajouter la carte</button><button class="plain" type="button" data-act="close-card" data-side="do">Annuler</button></div>
+            </form>
+            <ul class="cards" id="list-do"></ul>
+          </section>
+        </div>
+      </section>
+    </section>
+
+    <section id="panel-implementation" role="tabpanel" aria-labelledby="tab-implementation" hidden>
+      <section class="sec">
+        <div class="sec-head">
+          <div class="subtabs" id="sub-impl" role="tablist" aria-label="Étapes de l'implémentation"></div>
+          <button class="cta edit" data-act="add-cat">Ajouter une catégorie</button>
+        </div>
+        <div class="cats" id="impl"></div>
+      </section>
+    </section>
+  </main>
+</div>
+
+<footer><div class="wrap foot-row"><span id="foot"></span><button class="plain edit" id="logout" data-act="logout" hidden>Déconnecter cet appareil</button></div></footer>
+
+<form class="add-form edit" id="entry-form" hidden>
+  <input class="field" id="entry-title" required maxlength="160" placeholder="Titre" aria-label="Titre de l'élément">
+  <textarea class="field" id="entry-text" maxlength="4000" placeholder="Texte" aria-label="Texte de l'élément"></textarea>
+  <div class="form-actions"><button class="cta" type="submit">Ajouter à la liste</button><button class="plain" type="button" data-act="close-entry">Annuler</button></div>
+</form>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+const STAGES = [['lycee', 'Lycée'], ['prepa', 'Prépa'], ['ecole', 'École'], ['pro', 'Pro']];
+const STAGE_IDS = STAGES.map(s => s[0]);
+const TABS = ['roadmap', 'conseils', 'implementation'];
+const COLS = ['counters', 'tasks', 'cards', 'categories', 'entries'];
+const COLORS = [['#ffffff', 'Blanc'], ['#8ff5ec', 'Aqua'], ['#fde9ff', 'Lavande'], ['#ffd27a', 'Ambre'], ['#ff9d8a', 'Corail'], ['#a8ec9c', 'Vert']];
+const UP = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 2.5h10M8 14V6M4.5 9.500 8 6l3.500 3.500" stroke="currentColor" stroke-width="1.4"/></svg>';
+const GRIP = '<svg width="10" height="16" viewBox="0 0 10 16" fill="currentColor" aria-hidden="true"><circle cx="2" cy="2" r="1.4"/><circle cx="8" cy="2" r="1.4"/><circle cx="2" cy="8" r="1.4"/><circle cx="8" cy="8" r="1.4"/><circle cx="2" cy="14" r="1.4"/><circle cx="8" cy="14" r="1.4"/></svg>';
+
+const state = { tab: 'roadmap', conseils: 'lycee', implementation: 'lycee', openEntry: null };
+
+/* ---------- Stockage : base de la page, ou navigateur si elle est indisponible ---------- */
+const GH = { owner: 'Technocratehumaniste', repo: 'bw-data', path: 'data.json' };
+const API = `https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${GH.path}`;
+const KEYS = { token: 'bw-github-token', cache: 'bw-cache-v1', ops: 'bw-pending-v1' };
+const S = Object.fromEntries(COLS.map(c => [c, {}]));
+const loaded = Object.fromEntries(COLS.map(c => [c, false]));
+const readOnly = false;
+let mode = 'loading', token = null, sha = null, saving = false, failed = false, saveTimer = null, ops = {};
+
+const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+const lsDel = k => { try { localStorage.removeItem(k); } catch (e) {} };
+const hasOps = () => Object.keys(ops).length > 0;
+
+function uid() {
+  return (crypto.randomUUID ? crypto.randomUUID().replace(/-/g, '') : Date.now().toString(36) + Math.random().toString(36).slice(2));
+}
+function toB64(text) {
+  let bin = '';
+  new TextEncoder().encode(text).forEach(b => { bin += String.fromCharCode(b); });
+  return btoa(bin);
+}
+function fromB64(b64) {
+  const bin = atob(b64.replace(/\s/g, ''));
+  return new TextDecoder().decode(Uint8Array.from(bin, c => c.charCodeAt(0)));
+}
+const ghHeaders = () => ({ Authorization: 'Bearer ' + token, Accept: 'application/vnd.github+json' });
+function httpError(status) { const e = new Error('http ' + status); e.status = status; return e; }
+
+async function ghGet() {
+  const r = await fetch(API, { headers: ghHeaders(), cache: 'no-store' });
+  if (!r.ok) throw httpError(r.status);
+  const j = await r.json();
+  return { sha: j.sha, data: JSON.parse(fromB64(j.content)) };
+}
+function adopt(remote) {
+  sha = remote.sha;
+  COLS.forEach(c => { S[c] = (remote.data && remote.data[c]) || {}; });
+  applyOps();
+  lsSet(KEYS.cache, JSON.stringify(S));
+}
+function applyOps() {
+  Object.entries(ops).forEach(([key, doc]) => {
+    const [col, id] = key.split('/');
+    if (!S[col]) return;
+    if (doc === null) delete S[col][id]; else S[col][id] = doc;
+  });
+}
+function markOp(col, id) {
+  ops[col + '/' + id] = S[col][id] ? S[col][id] : null;
+  lsSet(KEYS.ops, JSON.stringify(ops));
+  lsSet(KEYS.cache, JSON.stringify(S));
+  failed = false;
+  renderStatus();
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(flush, 1200);
+}
+async function flush() {
+  if (saving || !hasOps() || mode !== 'gh') return;
+  saving = true;
+  renderStatus();
+  const sent = { ...ops };
+  try {
+    for (let attempt = 0; ; attempt++) {
+      const body = { message: 'Mise a jour', content: toB64(JSON.stringify(S, null, 1)) };
+      if (sha) body.sha = sha;
+      const r = await fetch(API, { method: 'PUT', headers: ghHeaders(), body: JSON.stringify(body) });
+      if (r.ok) { sha = (await r.json()).content.sha; break; }
+      if ((r.status === 409 || r.status === 422) && attempt < 3) { adopt(await ghGet()); paintAll(); continue; }
+      throw httpError(r.status);
+    }
+    Object.keys(sent).forEach(k => { if (ops[k] === sent[k]) delete ops[k]; });
+    if (hasOps()) lsSet(KEYS.ops, JSON.stringify(ops)); else lsDel(KEYS.ops);
+    failed = false;
+  } catch (e) {
+    saving = false;
+    if ([401, 403, 404].includes(e.status)) { lock(accessMessage(e.status)); return; }
+    failed = true;
+  }
+  saving = false;
+  renderStatus();
+  if (hasOps()) { clearTimeout(saveTimer); saveTimer = setTimeout(flush, failed ? 15000 : 1200); }
+}
+function create(col, data) {
+  const id = uid();
+  S[col][id] = data;
+  paint(col);
+  markOp(col, id);
+  return id;
+}
+function update(col, id, patch) {
+  if (!S[col][id]) return;
+  S[col][id] = { ...S[col][id], ...patch };
+  paint(col);
+  markOp(col, id);
+}
+function remove(col, id) {
+  delete S[col][id];
+  paint(col);
+  markOp(col, id);
+}
+function list(col, pred) {
+  return Object.entries(S[col]).map(([id, v]) => ({ id, ...v })).filter(pred || (() => true));
+}
+const byOrder = (a, b) => (a.order || 0) - (b.order || 0);
+const nextOrder = rows => rows.reduce((m, r) => Math.max(m, r.order || 0), 0) + 1;
+
+function renderStatus(msg) {
+  const label = msg || (mode === 'loading' ? 'Chargement'
+    : mode === 'locked' ? 'Non connecté'
+    : failed ? 'Hors ligne, nouvel essai'
+    : (saving || hasOps()) ? 'Enregistrement' : 'Enregistré');
+  $('#status').textContent = label;
+  $('#foot').textContent = mode === 'locked'
+    ? 'Site personnel. Le contenu reste dans un dépôt GitHub privé.'
+    : failed
+      ? 'Sauvegarde impossible pour le moment. Tes ajouts sont gardés sur cet appareil et seront envoyés dès que possible.'
+      : 'Tes ajouts sont enregistrés automatiquement dans ton dépôt GitHub privé.';
+  $('#logout').hidden = mode === 'locked';
+}
+function accessMessage(status) {
+  return status === 401 ? "Cette clé n'est pas valide ou a expiré. Crée une nouvelle clé."
+    : status === 404 ? "Cette clé n'a pas accès au dépôt bw-data. Vérifie l'étape 2."
+    : "Cette clé ne peut pas lire ou écrire dans bw-data. Vérifie l'étape 3.";
+}
+function lock(message) {
+  token = null;
+  lsDel(KEYS.token);
+  mode = 'locked';
+  document.body.classList.add('locked');
+  $('#gate').hidden = false;
+  $('#gate-msg').textContent = message || '';
+  renderStatus();
+}
+function showApp() {
+  document.body.classList.remove('locked');
+  $('#gate').hidden = true;
+  $('#gate-msg').textContent = '';
+  COLS.forEach(c => { loaded[c] = true; });
+  renderStatus();
+  paintAll();
+  dispatchEvent(new Event('resize'));
+  if (hasOps()) flush();
+}
+async function connect() {
+  mode = 'loading';
+  renderStatus();
+  try {
+    adopt(await ghGet());
+    mode = 'gh';
+    lsSet(KEYS.token, token);
+    showApp();
+  } catch (e) {
+    if ([401, 403, 404].includes(e.status)) { lock(accessMessage(e.status)); return; }
+    const cached = lsGet(KEYS.token) && lsGet(KEYS.cache);
+    if (!cached) { lock('GitHub est injoignable. Vérifie ta connexion et réessaie.'); return; }
+    try { const data = JSON.parse(cached); COLS.forEach(c => { S[c] = data[c] || {}; }); } catch (e2) {}
+    mode = 'gh';
+    failed = true;
+    showApp();
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(retryConnect, 15000);
+  }
+}
+async function retryConnect() {
+  try {
+    adopt(await ghGet());
+    failed = false;
+    paintAll();
+    renderStatus();
+    if (hasOps()) flush();
+  } catch (e) { saveTimer = setTimeout(retryConnect, 15000); }
+}
+async function syncRemote() {
+  if (mode !== 'gh' || saving || hasOps() || document.hidden) return;
+  try {
+    const r = await ghGet();
+    if (r.sha !== sha && !hasOps() && !saving) { adopt(r); paintAll(); }
+  } catch (e) {}
+}
+addEventListener('focus', syncRemote);
+document.addEventListener('visibilitychange', syncRemote);
+addEventListener('beforeunload', e => { if (hasOps()) e.preventDefault(); });
+
+function init() {
+  try { ops = JSON.parse(lsGet(KEYS.ops) || '{}') || {}; } catch (e) { ops = {}; }
+  token = lsGet(KEYS.token);
+  if (token) connect(); else lock();
+}
+
+/* ---------- Affichage, sans interrompre une saisie en cours ---------- */
+const VIEWS = {
+  counters: { root: '#counters', fn: renderCounters },
+  tasks: { root: '#tasks', fn: renderTasks },
+  cards: { root: '#halves', fn: renderCards },
+  impl: { root: '#impl', fn: renderImpl },
+};
+const COL_VIEW = { counters: 'counters', tasks: 'tasks', cards: 'cards', categories: 'impl', entries: 'impl' };
+const dirty = new Set();
+const entryForm = $('#entry-form');
+let drag = null;
+
+function paint(col) { paintView(COL_VIEW[col]); }
+function paintAll() { Object.keys(VIEWS).forEach(paintView); }
+function paintView(name) {
+  const v = VIEWS[name], root = $(v.root), a = document.activeElement;
+  if ((name === 'cards' && drag) || (root.contains(a) && a.matches('input, textarea'))) { dirty.add(name); return; }
+  const fk = a && root.contains(a) ? a.dataset.fk : null;
+  v.fn();
+  if (fk) {
+    const el = root.querySelector('[data-fk="' + CSS.escape(fk) + '"]');
+    if (el) el.focus();
+  }
+}
+function flushDirty() {
+  [...dirty].forEach(n => { dirty.delete(n); paintView(n); });
+}
+document.addEventListener('focusout', () => setTimeout(flushDirty, 0));
+
+const loadingNote = '<p class="empty">Chargement…</p>';
+const delBtn = (col, id, label, fk) => `<button class="icon del edit" data-act="del" data-col="${col}" data-id="${id}" data-fk="${fk}" aria-label="Supprimer ${esc(label)}" title="Supprimer">×</button>`;
+const fmtNumber = v => String(v).replace('.', ',');
+
+function renderCounters() {
+  const root = $('#counters');
+  if (!loaded.counters) { root.innerHTML = loadingNote; return; }
+  const rows = list('counters').sort(byOrder);
+  if (!rows.length) {
+    root.innerHTML = `<p class="empty">Aucun compteur.${readOnly ? '' : ' Ajoute le premier pour suivre un chiffre qui compte pour toi.'}</p>`;
+    return;
+  }
+  const ro = readOnly ? 'readonly' : '';
+  root.innerHTML = rows.map(c => `<article class="counter">
+    <input class="bare counter-n" inputmode="decimal" id="n-${c.id}" data-fk="n-${c.id}" data-field="value" data-id="${c.id}" value="${esc(fmtNumber(c.value))}" aria-label="Valeur du compteur ${esc(c.label)}" ${ro}>
+    <textarea class="bare counter-d" rows="1" id="d-${c.id}" data-fk="d-${c.id}" data-field="label" data-id="${c.id}" maxlength="120" placeholder="Description" aria-label="Description du compteur" ${ro}>${esc(c.label)}</textarea>
+    <div class="counter-tools edit">
+      <button class="icon" data-act="dec" data-id="${c.id}" data-fk="dec-${c.id}" aria-label="Retirer 1">−</button>
+      <button class="icon" data-act="inc" data-id="${c.id}" data-fk="inc-${c.id}" aria-label="Ajouter 1">+</button>
+      ${delBtn('counters', c.id, 'ce compteur', 'del-' + c.id)}
+    </div>
+  </article>`).join('');
+}
+
+function todayISO() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function fmtDate(iso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '');
+  if (!m) return esc(iso);
+  return new Date(+m[1], +m[2] - 1, +m[3]).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+}
+const safeColor = c => /^#[0-9a-f]{6}$/i.test(c || '') ? c : '#ffffff';
+
+function renderTasks() {
+  const root = $('#tasks');
+  if (!loaded.tasks) { root.innerHTML = loadingNote; return; }
+  const rows = list('tasks').sort((a, b) => String(a.date).localeCompare(String(b.date)) || (a.order || 0) - (b.order || 0));
+  if (!rows.length) { root.innerHTML = '<li class="empty">Aucune tâche. Choisis une date et décris ce que tu dois faire.</li>'; return; }
+  const today = todayISO();
+  root.innerHTML = rows.map(t => `<li class="task${t.done ? ' done' : ''}">
+    <input type="checkbox" id="done-${t.id}" data-fk="done-${t.id}" data-field="done" data-id="${t.id}" ${t.done ? 'checked' : ''} ${readOnly ? 'disabled' : ''} aria-label="Marquer comme faite : ${esc(t.text)}">
+    <span class="task-date">${fmtDate(t.date)}</span>
+    <span class="task-text" style="color:${safeColor(t.color)}">${esc(t.text)}</span>
+    ${!t.done && t.date < today ? '<span class="late">En retard</span>' : '<span></span>'}
+    ${delBtn('tasks', t.id, 'cette tâche', 'del-' + t.id)}
+  </li>`).join('');
+}
+
+function renderCards() {
+  const stage = state.conseils;
+  ['dont', 'do'].forEach(side => {
+    const root = $('#list-' + side);
+    if (!loaded.cards) { root.innerHTML = loadingNote; return; }
+    const rows = list('cards', c => c.stage === stage && c.side === side).sort(byOrder);
+    if (!rows.length) { root.innerHTML = '<li class="empty">Aucune carte pour cette étape.</li>'; return; }
+    root.innerHTML = rows.map((c, i) => `<li class="card" data-id="${c.id}">
+      <button class="grip edit" data-fk="grip-${c.id}" data-grip="${c.id}" aria-label="Déplacer ${esc(c.title)}. Flèches haut et bas pour changer de place." title="Glisser pour déplacer">${GRIP}</button>
+      <div><h3>${esc(c.title)}</h3>${c.text ? `<p>${esc(c.text)}</p>` : ''}</div>
+      <div class="card-tools edit">
+        ${i ? `<button class="icon" data-act="top" data-id="${c.id}" data-fk="top-${c.id}" aria-label="Mettre ${esc(c.title)} en haut de la pile" title="Mettre en haut">${UP}</button>` : ''}
+        ${delBtn('cards', c.id, 'cette carte', 'del-' + c.id)}
+      </div>
+    </li>`).join('');
+  });
+}
+
+function renderImpl() {
+  const root = $('#impl'), form = entryForm;
+  form.remove();
+  if (!loaded.categories || !loaded.entries) { root.innerHTML = loadingNote; return; }
+  const cats = list('categories', c => c.stage === state.implementation).sort(byOrder);
+  if (!cats.length) {
+    root.innerHTML = `<p class="empty">Aucune catégorie pour cette étape.${readOnly ? '' : ' Crée-en une pour commencer ta liste.'}</p>`;
+    return;
+  }
+  root.innerHTML = cats.map(c => {
+    const rows = list('entries', e => e.categoryId === c.id).sort(byOrder);
+    return `<section class="cat">
+      <div class="cat-head">
+        <input class="bare cat-title" id="cat-${c.id}" data-fk="cat-${c.id}" data-field="title" data-id="${c.id}" maxlength="120" value="${esc(c.title)}" aria-label="Titre de la catégorie" ${readOnly ? 'readonly' : ''}>
+        ${delBtn('categories', c.id, 'cette catégorie et ses éléments', 'del-' + c.id)}
+      </div>
+      <div class="cat-body">
+        ${rows.length ? `<ul class="entries">${rows.map(e => `<li class="entry">
+          <div><h3>${esc(e.title)}</h3>${e.text ? `<p>${esc(e.text)}</p>` : ''}</div>
+          ${delBtn('entries', e.id, 'cet élément', 'del-' + e.id)}
+        </li>`).join('')}</ul>` : ''}
+        <div class="slot" data-slot="${c.id}"></div>
+        ${state.openEntry === c.id ? '' : `<button class="ghost edit" data-act="open-entry" data-id="${c.id}" data-fk="open-${c.id}">+ Ajouter un élément</button>`}
+      </div>
+    </section>`;
+  }).join('');
+  const slot = state.openEntry && root.querySelector('[data-slot="' + state.openEntry + '"]');
+  if (slot) { slot.append(form); form.hidden = false; }
+}
+
+/* ---------- Navigation ---------- */
+function renderSubtabs(hostId, key) {
+  $('#' + hostId).innerHTML = STAGES.map(([id, label]) =>
+    `<button class="subtab" role="tab" id="${hostId}-${id}" data-act="stage" data-key="${key}" data-stage="${id}" aria-selected="${state[key] === id}" tabindex="${state[key] === id ? 0 : -1}">${label}</button>`
+  ).join('');
+}
+function parseHash() {
+  const [tab, stage] = location.hash.slice(1).split('-');
+  return { tab: TABS.includes(tab) ? tab : 'roadmap', stage: STAGE_IDS.includes(stage) ? stage : null };
+}
+function hashFor() {
+  return state.tab === 'roadmap' ? 'roadmap' : state.tab + '-' + state[state.tab];
+}
+function closeForms() {
+  document.querySelectorAll('.add-form[data-side]').forEach(f => { f.hidden = true; });
+  state.openEntry = null;
+}
+function apply(tab, stage) {
+  const changed = tab !== state.tab;
+  state.tab = tab;
+  if (stage && tab !== 'roadmap' && state[tab] !== stage) { state[tab] = stage; closeForms(); }
+  TABS.forEach(t => {
+    const on = t === tab;
+    $('#panel-' + t).hidden = !on;
+    const b = $('#tab-' + t);
+    b.setAttribute('aria-selected', String(on));
+    b.tabIndex = on ? 0 : -1;
+  });
+  renderSubtabs('sub-conseils', 'conseils');
+  renderSubtabs('sub-impl', 'implementation');
+  paintView('cards');
+  paintView('impl');
+  if (changed) scrollTo(0, 0);
+}
+function go(tab, stage) {
+  apply(tab, stage);
+  const h = hashFor();
+  if (location.hash.slice(1) !== h) { try { location.hash = h; } catch (e) {} }
+}
+addEventListener('hashchange', () => { const { tab, stage } = parseHash(); apply(tab, stage); });
+
+/* ---------- Actions ---------- */
+function arm(btn) {
+  if (btn.dataset.armed) return true;
+  btn.dataset.armed = '1';
+  btn.textContent = 'Supprimer ?';
+  setTimeout(() => {
+    if (btn.isConnected) { delete btn.dataset.armed; btn.textContent = '×'; }
+  }, 3000);
+  return false;
+}
+function step(id, delta) {
+  const c = S.counters[id];
+  if (c) update('counters', id, { value: +(Number(c.value || 0) + delta).toFixed(10) });
+}
+function focusSelect(fk) {
+  const el = document.querySelector('[data-fk="' + fk + '"]');
+  if (el) { el.focus(); el.select(); }
+}
+function moveToTop(id) {
+  const c = S.cards[id];
+  if (!c) return;
+  const pile = list('cards', x => x.stage === c.stage && x.side === c.side);
+  update('cards', id, { order: Math.min(...pile.map(x => x.order || 0)) - 1 });
+}
+
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-act]');
+  if (!t) return;
+  const { act, id } = t.dataset;
+  if (mode === 'loading' && act !== 'tab' && act !== 'stage') return;
+  if (act === 'logout') {
+    if (hasOps() || saving) { renderStatus('Enregistrement'); return; }
+    if (!t.dataset.armed) { t.dataset.armed = '1'; t.textContent = 'Confirmer la déconnexion'; return; }
+    Object.values(KEYS).forEach(lsDel);
+    location.reload();
+  }
+  else if (act === 'tab') { e.preventDefault(); go(t.dataset.tab); }
+  else if (act === 'stage') go(state.tab, t.dataset.stage);
+  else if (act === 'inc') step(id, 1);
+  else if (act === 'dec') step(id, -1);
+  else if (act === 'add-counter') {
+    const nid = create('counters', { value: 0, label: 'Nouveau compteur', order: nextOrder(list('counters')) });
+    focusSelect('d-' + nid);
+  }
+  else if (act === 'del') {
+    if (!arm(t)) return;
+    const col = t.dataset.col;
+    if (col === 'categories') list('entries', x => x.categoryId === id).forEach(x => remove('entries', x.id));
+    remove(col, id);
+  }
+  else if (act === 'top') moveToTop(id);
+  else if (act === 'open-card' || act === 'close-card') {
+    const f = document.querySelector('.add-form[data-side="' + t.dataset.side + '"]');
+    f.hidden = act === 'close-card';
+    if (f.hidden) f.reset(); else f.elements.title.focus();
+  }
+  else if (act === 'add-cat') {
+    const stage = state.implementation;
+    const nid = create('categories', { stage, title: 'Nouvelle catégorie', order: nextOrder(list('categories', c => c.stage === stage)) });
+    focusSelect('cat-' + nid);
+  }
+  else if (act === 'open-entry') {
+    state.openEntry = id;
+    paintView('impl');
+    $('#entry-title').focus();
+  }
+  else if (act === 'close-entry') {
+    state.openEntry = null;
+    entryForm.reset();
+    document.activeElement.blur();
+    paintView('impl');
+  }
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.matches('.counter-n, .cat-title, .counter-d')) { e.preventDefault(); e.target.blur(); }
+  const grip = e.target.closest && e.target.closest('[data-grip]');
+  if (grip && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+    e.preventDefault();
+    const card = grip.closest('.card');
+    const sib = e.key === 'ArrowUp' ? card.previousElementSibling : card.nextElementSibling;
+    if (!sib) return;
+    e.key === 'ArrowUp' ? sib.before(card) : sib.after(card);
+    grip.focus();
+    commitOrder(card);
+  }
+  const tablist = e.target.closest && e.target.closest('[role="tablist"]');
+  const delta = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
+  if (tablist && delta) {
+    e.preventDefault();
+    const tabs = [...tablist.querySelectorAll('[role="tab"]')];
+    const next = tabs[(tabs.indexOf(e.target.closest('[role="tab"]')) + delta + tabs.length) % tabs.length];
+    next.click();
+    const nextEl = document.getElementById(next.id);
+    if (nextEl) nextEl.focus();
+  }
+});
+
+document.addEventListener('change', e => {
+  const t = e.target, { field, id } = t.dataset;
+  if (!field) return;
+  if (field === 'value') {
+    const v = Number(t.value.replace(/\s/g, '').replace(',', '.'));
+    if (t.value.trim() === '' || !Number.isFinite(v)) { t.value = fmtNumber(S.counters[id].value); return; }
+    update('counters', id, { value: v });
+  }
+  else if (field === 'label') update('counters', id, { label: t.value.trim() });
+  else if (field === 'done') update('tasks', id, { done: t.checked });
+  else if (field === 'title') {
+    const title = t.value.trim() || 'Sans titre';
+    t.value = title;
+    update('categories', id, { title });
+  }
+});
+
+document.addEventListener('input', e => {
+  if (e.target.matches('.counter-d') && !CSS.supports('field-sizing', 'content')) {
+    e.target.style.height = 'auto';
+    e.target.style.height = e.target.scrollHeight + 'px';
+  }
+  if (e.target.id === 'task-custom') {
+    const other = document.querySelector('input[name="task-color"]:checked');
+    if (other) other.checked = false;
+  }
+});
+
+document.addEventListener('submit', e => {
+  e.preventDefault();
+  if (e.target.id === 'gate-form') {
+    const value = $('#gate-token').value.trim();
+    if (!value) return;
+    $('#gate-token').value = '';
+    token = value;
+    connect();
+    return;
+  }
+  if (mode === 'loading') return;
+  const f = e.target;
+  if (f.id === 'task-form') {
+    const text = $('#task-text').value.trim();
+    const date = $('#task-date').value;
+    if (!text || !date) return;
+    const radio = document.querySelector('input[name="task-color"]:checked');
+    create('tasks', { date, text, color: radio ? radio.value : safeColor($('#task-custom').value), done: false, order: Date.now() });
+    $('#task-text').value = '';
+    $('#task-text').focus();
+  }
+  else if (f.dataset.side) {
+    const title = f.elements.title.value.trim();
+    if (!title) return;
+    const side = f.dataset.side, stage = state.conseils, text = f.elements.text.value.trim();
+    f.reset();
+    f.hidden = true;
+    document.activeElement.blur();
+    create('cards', { stage, side, title, text, order: nextOrder(list('cards', c => c.stage === stage && c.side === side)) });
+  }
+  else if (f.id === 'entry-form') {
+    const title = $('#entry-title').value.trim();
+    if (!title) return;
+    const categoryId = state.openEntry, text = $('#entry-text').value.trim();
+    f.reset();
+    document.activeElement.blur();
+    state.openEntry = null;
+    create('entries', { categoryId, title, text, order: nextOrder(list('entries', x => x.categoryId === categoryId)) });
+  }
+});
+
+/* ---------- Déplacement des cartes ---------- */
+function commitOrder(card) {
+  const id = card.dataset.id;
+  const prev = card.previousElementSibling, next = card.nextElementSibling;
+  const a = prev && S.cards[prev.dataset.id], b = next && S.cards[next.dataset.id];
+  const cur = S.cards[id];
+  if (!cur) return;
+  const order = a && b ? ((a.order || 0) + (b.order || 0)) / 2 : a ? (a.order || 0) + 1 : b ? (b.order || 0) - 1 : cur.order;
+  if (order !== cur.order) update('cards', id, { order });
+}
+document.addEventListener('pointerdown', e => {
+  const grip = e.target.closest('[data-grip]');
+  if (!grip || readOnly || e.button) return;
+  e.preventDefault();
+  const card = grip.closest('.card');
+  const rect = card.getBoundingClientRect();
+  drag = { card, grip, offset: e.clientY - rect.top, start: card.previousElementSibling, pid: e.pointerId };
+  grip.setPointerCapture(e.pointerId);
+  card.classList.add('dragging');
+});
+document.addEventListener('pointermove', e => {
+  if (!drag || e.pointerId !== drag.pid) return;
+  const { card, offset } = drag, y = e.clientY;
+  const prev = card.previousElementSibling, next = card.nextElementSibling;
+  if (prev) { const r = prev.getBoundingClientRect(); if (y < r.top + r.height / 2) prev.before(card); }
+  if (next) { const r = next.getBoundingClientRect(); if (y > r.top + r.height / 2) next.after(card); }
+  if (y < 130) scrollBy(0, -10); else if (y > innerHeight - 50) scrollBy(0, 10);
+  card.style.transform = '';
+  card.style.transform = 'translateY(' + (y - offset - card.getBoundingClientRect().top) + 'px)';
+});
+function endDrag() {
+  if (!drag) return;
+  const { card, start } = drag;
+  card.style.transform = '';
+  card.classList.remove('dragging');
+  const moved = card.previousElementSibling !== start;
+  drag = null;
+  if (moved) commitOrder(card);
+  dirty.delete('cards');
+  paintView('cards');
+}
+document.addEventListener('pointerup', endDrag);
+document.addEventListener('pointercancel', endDrag);
+
+/* ---------- Orbe de particules ---------- */
+function startOrb() {
+  const canvas = $('#orb');
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+  const N = 1400;
+  const golden = Math.PI * (3 - Math.sqrt(5));
+  const pts = Array.from({ length: N }, (_, i) => {
+    const y = 1 - (i / (N - 1)) * 2, r = Math.sqrt(1 - y * y), a = golden * i;
+    return [Math.cos(a) * r, y, Math.sin(a) * r];
+  });
+  let size = 0;
+  function resize() {
+    const dpr = Math.min(devicePixelRatio || 1, 2);
+    size = canvas.clientWidth;
+    canvas.width = canvas.height = size * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  const mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
+  const TEAL = [0, 130, 124], AQUA = [203, 255, 252], PINK = [250, 209, 255];
+  const TILT = -0.42, ct = Math.cos(TILT), st = Math.sin(TILT);
+  function draw(t) {
+    ctx.clearRect(0, 0, size, size);
+    const R = size * .42, c = size / 2, ca = Math.cos(t), sa = Math.sin(t);
+    for (const [x, y, z] of pts) {
+      const x1 = x * ca + z * sa, z1 = -x * sa + z * ca;
+      const y2 = y * ct - z1 * st, z2 = y * st + z1 * ct;
+      const front = (z2 + 1) / 2, rim = Math.max(0, 1 - Math.abs(z2) * 3.2);
+      const col = rim > 0 && x1 > 0 ? mix(mix(TEAL, AQUA, front), PINK, rim) : mix(TEAL, AQUA, front * front);
+      const s = .6 + front * 1.5;
+      ctx.fillStyle = `rgba(${col[0]},${col[1]},${col[2]},${.28 + front * .72})`;
+      ctx.fillRect(c + x1 * R, c + y2 * R, s, s);
+    }
+  }
+  resize();
+  addEventListener('resize', () => { resize(); if (reducedMotion) draw(.8); });
+  if (reducedMotion) { draw(.8); return; }
+  const loop = ms => { draw(ms * .00012); requestAnimationFrame(loop); };
+  requestAnimationFrame(loop);
+}
+
+/* ---------- Démarrage ---------- */
+$('#task-date').value = todayISO();
+$('#colors').innerHTML = COLORS.map(([c, name], i) =>
+  `<input type="radio" name="task-color" id="c${i}" value="${c}" ${i ? '' : 'checked'}><label for="c${i}" style="color:${c}" title="${name}" aria-label="${name}">A</label>`
+).join('') + '<input type="color" id="task-custom" value="#cbfffc" title="Autre couleur" aria-label="Autre couleur">';
+
+const start = parseHash();
+if (start.stage && start.tab !== 'roadmap') state[start.tab] = start.stage;
+renderStatus();
+paintAll();
+apply(start.tab, start.stage);
+startOrb();
+init();
+</script>
+</body>
+</html>
