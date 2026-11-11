@@ -145,12 +145,16 @@ textarea.field { height: auto; min-height: 88px; padding: 10px 12px; resize: ver
 .colors input:checked + label { border-color: var(--mist); }
 .colors input:focus-visible + label { outline: 2px solid var(--mist); outline-offset: 2px; }
 .colors input[type="color"] { width: 28px; height: 28px; padding: 0; border: 0; background: none; border-radius: var(--r-small); cursor: pointer; }
-.task { display: grid; grid-template-columns: 24px 170px minmax(0, 1fr) auto auto; align-items: center; gap: 8px 16px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.day { display: grid; gap: 4px; padding-top: 24px; }
+.day:first-child { padding-top: 4px; }
+.day-head { display: flex; align-items: center; gap: 12px; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--mist); }
+.day-n { color: var(--silver); letter-spacing: .06em; white-space: nowrap; }
+.day-line { flex: 1; height: 1px; background: var(--line); min-width: 24px; }
+.day-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 32px; }
+.task { display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; align-items: center; gap: 14px; padding: 12px 0; border-bottom: 1px solid rgba(255, 255, 255, .1); }
 .task input[type="checkbox"] { width: 18px; height: 18px; accent-color: #edfffe; margin: 0; }
-.task-date { font-size: 14px; font-variant-numeric: tabular-nums; }
 .task-text { overflow-wrap: anywhere; }
 .task.done .task-text { text-decoration: line-through; opacity: .55; }
-.task.done .task-date { opacity: .55; }
 .late { font-size: 10px; letter-spacing: .15em; text-transform: uppercase; background: var(--phosphor); color: var(--abyss); padding: 2px 6px; border-radius: var(--r-small); }
 
 /* Sous-onglets */
@@ -216,12 +220,9 @@ footer { background: var(--deep); padding-block: 48px; font-size: 13px; }
   .top-in { grid-template-columns: 1fr auto; padding-block: 12px; }
   .tabs { grid-column: 1 / -1; grid-row: 2; justify-content: space-between; gap: 16px; }
   .task-form { grid-template-columns: minmax(0, 1fr); }
-  .task { grid-template-columns: 24px minmax(0, 1fr) auto; }
-  .task-date { grid-column: 2; grid-row: 1; }
-  .task-text { grid-column: 2 / -1; grid-row: 2; }
-  .late { grid-column: 2; grid-row: 3; justify-self: start; }
-  .task .del { grid-column: 3; grid-row: 1; }
-  .task input[type="checkbox"] { grid-column: 1; grid-row: 1; }
+}
+@media (max-width: 720px) {
+  .day-grid { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 640px) {
   .halves { grid-template-columns: minmax(0, 1fr); gap: 40px; }
@@ -721,19 +722,40 @@ function fmtDate(iso) {
 }
 const safeColor = c => /^#[0-9a-f]{6}$/i.test(c || '') ? c : '#ffffff';
 
+function fmtDayHead(iso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '');
+  if (!m) return esc(iso);
+  const d = new Date(+m[1], +m[2] - 1, +m[3]);
+  const opts = { weekday: 'short', day: 'numeric', month: 'short' };
+  if (d.getFullYear() !== new Date().getFullYear()) opts.year = 'numeric';
+  const txt = d.toLocaleDateString('fr-FR', opts);
+  return esc(txt.charAt(0).toUpperCase() + txt.slice(1));
+}
+
 function renderTasks() {
   const root = $('#tasks');
   if (!loaded.tasks) { root.innerHTML = loadingNote; return; }
   const rows = list('tasks').sort((a, b) => String(a.date).localeCompare(String(b.date)) || (a.order || 0) - (b.order || 0));
   if (!rows.length) { root.innerHTML = '<li class="empty">Aucune tâche. Choisis une date et décris ce que tu dois faire.</li>'; return; }
   const today = todayISO();
-  root.innerHTML = rows.map(t => `<li class="task${t.done ? ' done' : ''}">
-    <input type="checkbox" id="done-${t.id}" data-fk="done-${t.id}" data-field="done" data-id="${t.id}" ${t.done ? 'checked' : ''} ${readOnly ? 'disabled' : ''} aria-label="Marquer comme faite : ${esc(t.text)}">
-    <span class="task-date">${fmtDate(t.date)}</span>
-    <span class="task-text" style="color:${safeColor(t.color)}">${esc(t.text)}</span>
-    ${!t.done && t.date < today ? '<span class="late">En retard</span>' : '<span></span>'}
-    ${delBtn('tasks', t.id, 'cette tâche', 'del-' + t.id)}
-  </li>`).join('');
+  const groups = [];
+  rows.forEach(t => {
+    const g = groups[groups.length - 1];
+    if (g && g.date === t.date) g.items.push(t); else groups.push({ date: t.date, items: [t] });
+  });
+  root.innerHTML = groups.map(g => {
+    const n = g.items.length;
+    const note = g.date === today ? "aujourd'hui" : n + (n > 1 ? ' tâches' : ' tâche');
+    const late = g.date < today && g.items.some(t => !t.done);
+    return `<li class="day">
+      <div class="day-head"><span>${fmtDayHead(g.date)}</span><span class="day-n">· ${note}</span>${late ? '<span class="late">En retard</span>' : ''}<i class="day-line" aria-hidden="true"></i></div>
+      <ul class="day-grid">${g.items.map(t => `<li class="task${t.done ? ' done' : ''}">
+        <input type="checkbox" id="done-${t.id}" data-fk="done-${t.id}" data-field="done" data-id="${t.id}" ${t.done ? 'checked' : ''} ${readOnly ? 'disabled' : ''} aria-label="Marquer comme faite : ${esc(t.text)}">
+        <span class="task-text" style="color:${safeColor(t.color)}">${esc(t.text)}</span>
+        ${delBtn('tasks', t.id, 'cette tâche', 'del-' + t.id)}
+      </li>`).join('')}</ul>
+    </li>`;
+  }).join('');
 }
 
 function renderCards() {
