@@ -198,7 +198,14 @@ footer { background: var(--deep); padding-block: 48px; font-size: 13px; }
 .gate-card h1 { font-size: clamp(2.1rem, 1.5rem + 2.4vw, 3rem); line-height: 1; letter-spacing: -.04em; }
 .gate-card ol { margin: 0; padding-left: 20px; display: grid; gap: 8px; }
 .gate-card a { color: var(--mist); }
-#gate-form { display: grid; gap: 10px; }
+.stack-form { display: grid; gap: 10px; }
+#key-part { border-top: 1px solid var(--line); padding-top: 16px; }
+#key-part summary { cursor: pointer; color: var(--mist); }
+.key-body { display: grid; gap: 16px; margin-top: 16px; }
+.foot-actions { display: flex; flex-wrap: wrap; gap: 4px; }
+.cred { max-width: 520px; margin-top: 24px; padding: 24px; background: var(--abyss); border-radius: var(--r-card); }
+#cred-msg:empty { display: none; }
+#cred-msg { color: var(--mist); }
 .gate-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; }
 #gate-msg { color: var(--phosphor); }
 #gate-msg:empty { display: none; }
@@ -246,20 +253,33 @@ footer { background: var(--deep); padding-block: 48px; font-size: 13px; }
   <div class="gate-card">
     <span class="eyebrow">Accès privé</span>
     <h1>Connecte cet appareil</h1>
-    <p>Tes données sont dans le dépôt GitHub privé bw-data. Une clé d'accès permet au site de les lire et de les enregistrer. Elle reste dans ce navigateur.</p>
-    <ol>
-      <li><a href="https://github.com/settings/personal-access-tokens/new?name=BW%40%20site&amp;description=Lecture%20et%20ecriture%20de%20bw-data&amp;expires_in=none&amp;contents=write" target="_blank" rel="noopener">Crée une clé d'accès sur GitHub</a>.</li>
-      <li>Dans « Repository access », choisis « Only select repositories », puis bw-data.</li>
-      <li>Vérifie que « Contents » est réglé sur « Read and write ».</li>
-      <li>Clique sur « Generate token », copie la clé et colle-la ci-dessous.</li>
-    </ol>
-    <form id="gate-form">
-      <label class="eyebrow" for="gate-token">Clé d'accès</label>
-      <div class="gate-row">
-        <input class="field" id="gate-token" type="password" autocomplete="off" spellcheck="false" required placeholder="github_pat_…">
-        <button class="cta" type="submit">Connecter</button>
-      </div>
+    <p>Connecte-toi avec ton identifiant et ton mot de passe.</p>
+    <form id="login-form" class="stack-form">
+      <label class="eyebrow" for="login-id">Identifiant</label>
+      <input class="field" id="login-id" autocomplete="username" autocapitalize="off" spellcheck="false" required>
+      <label class="eyebrow" for="login-pass">Mot de passe</label>
+      <input class="field" id="login-pass" type="password" autocomplete="current-password" required>
+      <button class="cta" type="submit" id="login-btn">Se connecter</button>
     </form>
+    <details id="key-part">
+      <summary>Se connecter avec une clé d'accès GitHub</summary>
+      <div class="key-body">
+        <p>Tes données sont dans le dépôt GitHub privé bw-data. Une clé d'accès permet au site de les lire et de les enregistrer. Elle reste dans ce navigateur.</p>
+        <ol>
+          <li><a href="https://github.com/settings/personal-access-tokens/new?name=BW%40%20site&amp;description=Lecture%20et%20ecriture%20de%20bw-data%20et%20bw&amp;expires_in=none&amp;contents=write" target="_blank" rel="noopener">Crée une clé d'accès sur GitHub</a>.</li>
+          <li>Dans « Repository access », choisis « Only select repositories », puis bw-data et bw. Le dépôt bw sert à enregistrer ton identifiant.</li>
+          <li>Vérifie que « Contents » est réglé sur « Read and write ».</li>
+          <li>Clique sur « Generate token », copie la clé et colle-la ci-dessous.</li>
+        </ol>
+        <form id="gate-form" class="stack-form">
+          <label class="eyebrow" for="gate-token">Clé d'accès</label>
+          <div class="gate-row">
+            <input class="field" id="gate-token" type="password" autocomplete="off" spellcheck="false" required placeholder="github_pat_…">
+            <button class="cta" type="submit">Connecter</button>
+          </div>
+        </form>
+      </div>
+    </details>
     <p id="gate-msg" role="alert"></p>
   </div>
 </section>
@@ -329,7 +349,21 @@ footer { background: var(--deep); padding-block: 48px; font-size: 13px; }
   </main>
 </div>
 
-<footer><div class="wrap foot-row"><span id="foot"></span><button class="plain edit" id="logout" data-act="logout" hidden>Déconnecter cet appareil</button></div></footer>
+<footer><div class="wrap">
+  <div class="foot-row"><span id="foot"></span><div class="foot-actions"><button class="plain edit" id="cred-open" data-act="cred-open" hidden>Créer mon identifiant</button><button class="plain edit" id="logout" data-act="logout" hidden>Déconnecter cet appareil</button></div></div>
+  <form id="cred-form" class="stack-form cred" hidden>
+    <span class="eyebrow">Identifiant et mot de passe</span>
+    <p>Ils remplaceront la clé d'accès sur tes autres appareils. Le mot de passe n'est enregistré nulle part : il sert à chiffrer ta clé. S'il est perdu, il faudra recréer un identifiant depuis un appareil connecté.</p>
+    <label class="eyebrow" for="cred-id">Identifiant</label>
+    <input class="field" id="cred-id" autocomplete="username" autocapitalize="off" spellcheck="false" required maxlength="80">
+    <label class="eyebrow" for="cred-pass">Mot de passe, 12 caractères minimum</label>
+    <input class="field" id="cred-pass" type="password" autocomplete="new-password" required minlength="12">
+    <label class="eyebrow" for="cred-pass2">Confirme le mot de passe</label>
+    <input class="field" id="cred-pass2" type="password" autocomplete="new-password" required minlength="12">
+    <div class="form-actions"><button class="cta" type="submit" id="cred-btn">Enregistrer l'identifiant</button><button class="plain" type="button" data-act="cred-close">Annuler</button></div>
+    <p id="cred-msg" role="status"></p>
+  </form>
+</div></footer>
 
 <form class="add-form edit" id="entry-form" hidden>
   <input class="field" id="entry-title" required maxlength="160" placeholder="Titre" aria-label="Titre de l'élément">
@@ -472,6 +506,8 @@ function renderStatus(msg) {
       ? 'Sauvegarde impossible pour le moment. Tes ajouts sont gardés sur cet appareil et seront envoyés dès que possible.'
       : 'Tes ajouts sont enregistrés automatiquement dans ton dépôt GitHub privé.';
   $('#logout').hidden = mode === 'locked';
+  $('#cred-open').hidden = mode === 'locked';
+  if (mode === 'locked') $('#cred-form').hidden = true;
 }
 function accessMessage(status) {
   return status === 401 ? "Cette clé n'est pas valide ou a expiré. Crée une nouvelle clé."
@@ -486,6 +522,7 @@ function lock(message) {
   $('#gate').hidden = false;
   $('#gate-msg').textContent = message || '';
   renderStatus();
+  fetchAuth().then(box => { if (!box) $('#key-part').open = true; });
 }
 function showApp() {
   document.body.classList.remove('locked');
@@ -536,6 +573,83 @@ async function syncRemote() {
 addEventListener('focus', syncRemote);
 document.addEventListener('visibilitychange', syncRemote);
 addEventListener('beforeunload', e => { if (hasOps()) e.preventDefault(); });
+
+const AUTH = { path: 'auth.json', api: 'https://api.github.com/repos/Technocratehumaniste/bw/contents/auth.json', iter: 600000 };
+const bytesToB64 = u8 => { let s = ''; u8.forEach(b => { s += String.fromCharCode(b); }); return btoa(s); };
+const b64ToBytes = b => Uint8Array.from(atob(b), c => c.charCodeAt(0));
+async function deriveKey(id, pass, salt, iter) {
+  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(id.trim() + '\u0000' + pass), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({ name: 'PBKDF2', salt, iterations: iter, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+}
+async function sealToken(id, pass) {
+  const salt = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
+  const key = await deriveKey(id, pass, salt, AUTH.iter);
+  const data = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(token)));
+  return { v: 1, iter: AUTH.iter, salt: bytesToB64(salt), iv: bytesToB64(iv), data: bytesToB64(data) };
+}
+async function openToken(id, pass, box) {
+  const key = await deriveKey(id, pass, b64ToBytes(box.salt), box.iter);
+  return new TextDecoder().decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64ToBytes(box.iv) }, key, b64ToBytes(box.data)));
+}
+async function fetchAuth() {
+  try {
+    const r = await fetch(AUTH.path + '?t=' + Date.now(), { cache: 'no-store' });
+    return r.ok ? await r.json() : null;
+  } catch (e) { return null; }
+}
+async function login() {
+  const btn = $('#login-btn'), id = $('#login-id').value, pass = $('#login-pass').value;
+  if (!id.trim() || !pass) return;
+  btn.disabled = true;
+  btn.textContent = 'Vérification…';
+  $('#gate-msg').textContent = '';
+  try {
+    const box = await fetchAuth();
+    if (!box) {
+      $('#gate-msg').textContent = "Aucun identifiant n'a encore été créé. Connecte-toi une première fois avec une clé d'accès.";
+      $('#key-part').open = true;
+      return;
+    }
+    let t;
+    try { t = await openToken(id, pass, box); } catch (e) {
+      $('#gate-msg').textContent = 'Identifiant ou mot de passe incorrect.';
+      return;
+    }
+    $('#login-pass').value = '';
+    token = t;
+    connect();
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Se connecter';
+  }
+}
+async function saveCredential() {
+  const msg = $('#cred-msg'), btn = $('#cred-btn');
+  const id = $('#cred-id').value.trim(), pass = $('#cred-pass').value;
+  if (!id) { msg.textContent = "Choisis un identifiant."; return; }
+  if (pass.length < 12) { msg.textContent = 'Le mot de passe doit faire au moins 12 caractères.'; return; }
+  if (pass !== $('#cred-pass2').value) { msg.textContent = 'Les deux mots de passe ne sont pas identiques.'; return; }
+  btn.disabled = true;
+  msg.textContent = 'Chiffrement et enregistrement…';
+  try {
+    const box = await sealToken(id, pass);
+    const cur = await fetch(AUTH.api, { headers: ghHeaders(), cache: 'no-store' });
+    if (cur.status !== 200 && cur.status !== 404) throw httpError(cur.status);
+    const body = { message: "Met a jour l'identifiant", content: toB64(JSON.stringify(box)) };
+    if (cur.status === 200) body.sha = (await cur.json()).sha;
+    const r = await fetch(AUTH.api, { method: 'PUT', headers: ghHeaders(), body: JSON.stringify(body) });
+    if (!r.ok) throw httpError(r.status);
+    $('#cred-pass').value = '';
+    $('#cred-pass2').value = '';
+    msg.textContent = "Identifiant enregistré. Il fonctionnera sur tes autres appareils d'ici une à deux minutes.";
+  } catch (e) {
+    msg.textContent = [401, 403, 404].includes(e.status) && e.status !== 401
+      ? "Ta clé n'a pas accès au dépôt bw. Crée une clé qui inclut bw-data et bw, puis reconnecte-toi avec elle."
+      : e.status === 401 ? "Ta clé n'est plus valide. Reconnecte-toi avec une nouvelle clé." : "Enregistrement impossible pour le moment. Réessaie.";
+  } finally {
+    btn.disabled = false;
+  }
+}
 
 function init() {
   try { ops = JSON.parse(lsGet(KEYS.ops) || '{}') || {}; } catch (e) { ops = {}; }
@@ -741,6 +855,13 @@ document.addEventListener('click', e => {
   if (!t) return;
   const { act, id } = t.dataset;
   if (mode === 'loading' && act !== 'tab' && act !== 'stage') return;
+  if (act === 'cred-open' || act === 'cred-close') {
+    const f = $('#cred-form');
+    f.hidden = act === 'cred-close';
+    $('#cred-msg').textContent = '';
+    if (f.hidden) f.reset(); else $('#cred-id').focus();
+    return;
+  }
   if (act === 'logout') {
     if (hasOps() || saving) { renderStatus('Enregistrement'); return; }
     if (!t.dataset.armed) { t.dataset.armed = '1'; t.textContent = 'Confirmer la déconnexion'; return; }
@@ -839,6 +960,8 @@ document.addEventListener('input', e => {
 
 document.addEventListener('submit', e => {
   e.preventDefault();
+  if (e.target.id === 'login-form') { login(); return; }
+  if (e.target.id === 'cred-form') { saveCredential(); return; }
   if (e.target.id === 'gate-form') {
     const value = $('#gate-token').value.trim();
     if (!value) return;
