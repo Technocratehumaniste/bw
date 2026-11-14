@@ -164,15 +164,22 @@ textarea.field { height: auto; min-height: 88px; padding: 10px 12px; resize: ver
 .subtab[aria-selected="true"] { background: var(--kelp); border-color: var(--kelp); color: var(--white); }
 
 /* Cartes */
-.halves { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px clamp(20px, 3vw, 48px); }
+.halves { display: grid; gap: 48px; }
 .col { display: grid; gap: 16px; align-content: start; min-width: 0; }
 .col-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-bottom: 16px; border-bottom: 1px solid var(--line); }
 .col-head h2 { font-size: clamp(24px, 2.6vw, 36px); line-height: 1.05; letter-spacing: -.02em; }
 .add-form { display: grid; gap: 10px; background: var(--deep); border-radius: var(--r-card); padding: 16px; }
-.cards { display: grid; gap: 12px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 12px; align-items: start; }
+.cards .empty { grid-column: 1 / -1; padding: 8px 0; }
+.col .add-form { max-width: 640px; }
+.col-legacy { background: var(--deep); border-radius: var(--r-card); padding: clamp(20px, 3vw, 32px); }
+.card-tools select.field { height: 32px; width: auto; padding: 0 8px; font-size: 13px; }
+.col-legacy .card { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+.col-legacy .card > span:first-child { display: none; }
+.col-legacy .card .eyebrow { display: block; margin-bottom: 6px; }
+.col-legacy .card-tools { align-items: center; }
 .card { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: start; padding: 18px; border-radius: var(--r-card); }
-.col-do .card { background: var(--kelp); }
-.col-dont .card { background: var(--deep); }
+.col .card { background: var(--kelp); }
 .card h3 { font-size: 18px; line-height: 1.25; letter-spacing: -.01em; overflow-wrap: anywhere; }
 .card p, .entry p { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 14px; margin-top: 4px; }
 .card.dragging { z-index: 3; outline: 1px solid var(--mist); }
@@ -316,23 +323,46 @@ footer { background: var(--deep); padding-block: 48px; font-size: 13px; }
       <section class="sec">
         <div class="subtabs" id="sub-conseils" role="tablist" aria-label="Étapes des conseils"></div>
         <div class="halves" id="halves">
-          <section class="col col-dont">
-            <div class="col-head"><h2>À ne pas faire</h2><button class="ghost edit" data-act="open-card" data-side="dont">+ Ajouter</button></div>
-            <form class="add-form edit" data-side="dont" hidden>
-              <input class="field" id="card-title-dont" name="title" required maxlength="120" placeholder="Titre" aria-label="Titre de la carte">
-              <textarea class="field" id="card-text-dont" name="text" maxlength="2000" placeholder="Texte" aria-label="Texte de la carte"></textarea>
-              <div class="form-actions"><button class="cta" type="submit">Ajouter la carte</button><button class="plain" type="button" data-act="close-card" data-side="dont">Annuler</button></div>
-            </form>
-            <ul class="cards" id="list-dont"></ul>
+          <section class="col col-legacy" id="legacy" hidden>
+            <div class="col-head"><h2>Cartes à reclasser</h2></div>
+            <p>Ces cartes viennent des anciennes colonnes « À faire » et « À ne pas faire ». Choisis une catégorie pour chacune, cet encadré disparaîtra une fois vide.</p>
+            <ul class="cards" id="list-legacy"></ul>
           </section>
-          <section class="col col-do">
-            <div class="col-head"><h2>À faire</h2><button class="ghost edit" data-act="open-card" data-side="do">+ Ajouter</button></div>
-            <form class="add-form edit" data-side="do" hidden>
-              <input class="field" id="card-title-do" name="title" required maxlength="120" placeholder="Titre" aria-label="Titre de la carte">
-              <textarea class="field" id="card-text-do" name="text" maxlength="2000" placeholder="Texte" aria-label="Texte de la carte"></textarea>
-              <div class="form-actions"><button class="cta" type="submit">Ajouter la carte</button><button class="plain" type="button" data-act="close-card" data-side="do">Annuler</button></div>
+          <section class="col">
+            <div class="col-head"><h2>Clés de la prépa</h2><button class="ghost edit" data-act="open-card" data-side="cles">+ Ajouter</button></div>
+            <form class="add-form edit" data-side="cles" hidden>
+              <input class="field" id="card-title-cles" name="title" required maxlength="120" placeholder="Titre" aria-label="Titre de la carte">
+              <textarea class="field" id="card-text-cles" name="text" maxlength="2000" placeholder="Texte" aria-label="Texte de la carte"></textarea>
+              <div class="form-actions"><button class="cta" type="submit">Ajouter la carte</button><button class="plain" type="button" data-act="close-card" data-side="cles">Annuler</button></div>
             </form>
-            <ul class="cards" id="list-do"></ul>
+            <ul class="cards" id="list-cles"></ul>
+          </section>
+          <section class="col">
+            <div class="col-head"><h2>Conseils de la prépa</h2><button class="ghost edit" data-act="open-card" data-side="conseils">+ Ajouter</button></div>
+            <form class="add-form edit" data-side="conseils" hidden>
+              <input class="field" id="card-title-conseils" name="title" required maxlength="120" placeholder="Titre" aria-label="Titre de la carte">
+              <textarea class="field" id="card-text-conseils" name="text" maxlength="2000" placeholder="Texte" aria-label="Texte de la carte"></textarea>
+              <div class="form-actions"><button class="cta" type="submit">Ajouter la carte</button><button class="plain" type="button" data-act="close-card" data-side="conseils">Annuler</button></div>
+            </form>
+            <ul class="cards" id="list-conseils"></ul>
+          </section>
+          <section class="col">
+            <div class="col-head"><h2>Cheatcode</h2><button class="ghost edit" data-act="open-card" data-side="cheatcode">+ Ajouter</button></div>
+            <form class="add-form edit" data-side="cheatcode" hidden>
+              <input class="field" id="card-title-cheatcode" name="title" required maxlength="120" placeholder="Titre" aria-label="Titre de la carte">
+              <textarea class="field" id="card-text-cheatcode" name="text" maxlength="2000" placeholder="Texte" aria-label="Texte de la carte"></textarea>
+              <div class="form-actions"><button class="cta" type="submit">Ajouter la carte</button><button class="plain" type="button" data-act="close-card" data-side="cheatcode">Annuler</button></div>
+            </form>
+            <ul class="cards" id="list-cheatcode"></ul>
+          </section>
+          <section class="col">
+            <div class="col-head"><h2>Les +</h2><button class="ghost edit" data-act="open-card" data-side="plus">+ Ajouter</button></div>
+            <form class="add-form edit" data-side="plus" hidden>
+              <input class="field" id="card-title-plus" name="title" required maxlength="120" placeholder="Titre" aria-label="Titre de la carte">
+              <textarea class="field" id="card-text-plus" name="text" maxlength="2000" placeholder="Texte" aria-label="Texte de la carte"></textarea>
+              <div class="form-actions"><button class="cta" type="submit">Ajouter la carte</button><button class="plain" type="button" data-act="close-card" data-side="plus">Annuler</button></div>
+            </form>
+            <ul class="cards" id="list-plus"></ul>
           </section>
         </div>
       </section>
@@ -758,13 +788,17 @@ function renderTasks() {
   }).join('');
 }
 
+const SIDES = [['cles', 'Clés de la prépa'], ['conseils', 'Conseils de la prépa'], ['cheatcode', 'Cheatcode'], ['plus', 'Les +']];
+const SIDE_IDS = SIDES.map(x => x[0]);
+const LEGACY_LABEL = { do: 'Ancien « À faire »', dont: 'Ancien « À ne pas faire »' };
+
 function renderCards() {
   const stage = state.conseils;
-  ['dont', 'do'].forEach(side => {
+  SIDE_IDS.forEach(side => {
     const root = $('#list-' + side);
     if (!loaded.cards) { root.innerHTML = loadingNote; return; }
     const rows = list('cards', c => c.stage === stage && c.side === side).sort(byOrder);
-    if (!rows.length) { root.innerHTML = '<li class="empty">Aucune carte pour cette étape.</li>'; return; }
+    if (!rows.length) { root.innerHTML = '<li class="empty">Aucune carte dans cette catégorie.</li>'; return; }
     root.innerHTML = rows.map((c, i) => `<li class="card" data-id="${c.id}">
       <button class="grip edit" data-fk="grip-${c.id}" data-grip="${c.id}" aria-label="Déplacer ${esc(c.title)}. Flèches haut et bas pour changer de place." title="Glisser pour déplacer">${GRIP}</button>
       <div><h3>${esc(c.title)}</h3>${c.text ? `<p>${esc(c.text)}</p>` : ''}</div>
@@ -774,6 +808,18 @@ function renderCards() {
       </div>
     </li>`).join('');
   });
+  const legacy = loaded.cards ? list('cards', c => c.stage === stage && !SIDE_IDS.includes(c.side)).sort(byOrder) : [];
+  $('#legacy').hidden = !legacy.length;
+  $('#list-legacy').innerHTML = legacy.map(c => `<li class="card" data-id="${c.id}">
+    <span></span>
+    <div><span class="eyebrow">${LEGACY_LABEL[c.side] || 'Ancienne carte'}</span><h3>${esc(c.title)}</h3>${c.text ? `<p>${esc(c.text)}</p>` : ''}</div>
+    <div class="card-tools edit">
+      <select class="field" id="move-${c.id}" data-move="${c.id}" aria-label="Classer ${esc(c.title)} dans une catégorie">
+        <option value="">Classer dans…</option>${SIDES.map(([k, l]) => `<option value="${k}">${esc(l)}</option>`).join('')}
+      </select>
+      ${delBtn('cards', c.id, 'cette carte', 'del-' + c.id)}
+    </div>
+  </li>`).join('');
 }
 
 function renderImpl() {
@@ -954,6 +1000,12 @@ document.addEventListener('keydown', e => {
 
 document.addEventListener('change', e => {
   const t = e.target, { field, id } = t.dataset;
+  if (t.dataset.move) {
+    const c = S.cards[t.dataset.move], side = t.value;
+    if (!c || !SIDE_IDS.includes(side)) return;
+    update('cards', t.dataset.move, { side, order: nextOrder(list('cards', x => x.stage === c.stage && x.side === side)) });
+    return;
+  }
   if (!field) return;
   if (field === 'value') {
     const v = Number(t.value.replace(/\s/g, '').replace(',', '.'));
@@ -1039,24 +1091,30 @@ document.addEventListener('pointerdown', e => {
   e.preventDefault();
   const card = grip.closest('.card');
   const rect = card.getBoundingClientRect();
-  drag = { card, grip, offset: e.clientY - rect.top, start: card.previousElementSibling, pid: e.pointerId };
-  grip.setPointerCapture(e.pointerId);
+  drag = { card, grip, offset: e.clientY - rect.top, offX: e.clientX - rect.left, start: card.previousElementSibling, pid: e.pointerId };
+  try { grip.setPointerCapture(e.pointerId); } catch (err) {}
+  card.style.pointerEvents = 'none';
   card.classList.add('dragging');
 });
 document.addEventListener('pointermove', e => {
   if (!drag || e.pointerId !== drag.pid) return;
-  const { card, offset } = drag, y = e.clientY;
-  const prev = card.previousElementSibling, next = card.nextElementSibling;
-  if (prev) { const r = prev.getBoundingClientRect(); if (y < r.top + r.height / 2) prev.before(card); }
-  if (next) { const r = next.getBoundingClientRect(); if (y > r.top + r.height / 2) next.after(card); }
+  const { card } = drag, x = e.clientX, y = e.clientY;
+  const el = document.elementFromPoint(x, y);
+  const over = el && el.closest('.card');
+  if (over && over !== card && over.parentNode === card.parentNode) {
+    const sibs = [...card.parentNode.children];
+    if (sibs.indexOf(over) < sibs.indexOf(card)) over.before(card); else over.after(card);
+  }
   if (y < 130) scrollBy(0, -10); else if (y > innerHeight - 50) scrollBy(0, 10);
   card.style.transform = '';
-  card.style.transform = 'translateY(' + (y - offset - card.getBoundingClientRect().top) + 'px)';
+  const r = card.getBoundingClientRect();
+  card.style.transform = `translate(${x - drag.offX - r.left}px, ${y - drag.offset - r.top}px)`;
 });
 function endDrag() {
   if (!drag) return;
   const { card, start } = drag;
   card.style.transform = '';
+  card.style.pointerEvents = '';
   card.classList.remove('dragging');
   const moved = card.previousElementSibling !== start;
   drag = null;
